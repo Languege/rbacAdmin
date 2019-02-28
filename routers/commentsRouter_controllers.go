@@ -106,6 +106,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["rbacAdmin/controllers:MainController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:MainController"],
+        beego.ControllerComments{
+            Method: "Welcome",
+            Router: `/welcome`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
         beego.ControllerComments{
             Method: "Post",
@@ -147,6 +156,24 @@ func init() {
             Method: "Delete",
             Router: `/:id`,
             AllowHTTPMethods: []string{"delete"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "PermissionList",
+            Router: `/permission_list`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "RoleList",
+            Router: `/role_list`,
+            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

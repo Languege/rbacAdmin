@@ -11,6 +11,7 @@
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="/static/css/font.css">
     <link rel="stylesheet" href="/static/css/xadmin.css">
+    <link rel="stylesheet" href="/static/lib/layui/css/layui.css">
     <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
     <script src="/static/lib/layui/layui.js" charset="utf-8"></script>
     <script type="text/javascript" src="/static/js/xadmin.js"></script>
@@ -25,7 +26,7 @@
         {{.LeftNav}}
         <!-- 左侧菜单开始 -->
 
-        <!-- 左侧主体开始 -->
+        <!-- 右侧主体开始 -->
         <div class="page-content">
             <div class="layui-tab tab" lay-filter="xbs_tab" lay-allowclose="false">
                 <ul class="layui-tab-title">
@@ -39,10 +40,7 @@
             </div>
         </div>
         <div class="page-content-bg"></div>
-        <!-- 左侧主体结束 -->
-        <div class="container">
-             {{.LayoutContent}}
-        </div>
+        <!-- 右侧主体结束 -->
     <!-- 中部结束 -->
 
     <!-- 底部开始 -->

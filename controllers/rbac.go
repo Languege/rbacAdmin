@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
+	"rbacAdmin/repositories"
 )
 
 // RbacController operations for Rbac
 type RbacController struct {
-	beego.Controller
+	BaseController
 }
 
 // URLMapping ...
@@ -77,4 +77,44 @@ func (c *RbacController) Put() {
 // @router /:id [delete]
 func (c *RbacController) Delete() {
 
+}
+
+//@router /permission_list	[get]
+func (c *RbacController) PermissionList() {
+
+	query, fields, sortby, order, page, pageSize, err := c.PageParams()
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	pageData, err := repositories.AdminPermissions_Pagination(query, fields, sortby, order, page, pageSize)
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	} else {
+
+		c.TplName = "rbac/permission_list.html"
+		c.Layout = "_layout/iframe_layout.html"
+		c.Data["page"] = pageData
+	}
+}
+
+//@router /role_list	[get]
+func (c *RbacController) RoleList()  {
+	query, fields, sortby, order, page, pageSize, err := c.PageParams()
+
+	pageData, err := repositories.AdminRoles_Pagination(query, fields, sortby, order, page, pageSize)
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	} else {
+
+		c.TplName = "rbac/role_list.html"
+		c.Layout = "_layout/iframe_layout.html"
+		c.Data["page"] = pageData
+	}
 }

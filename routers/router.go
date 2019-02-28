@@ -46,6 +46,19 @@ func init() {
 				&controllers.LoginController{},
 			),
 		),
+
+		beego.NSNamespace("/home",
+			beego.NSInclude(
+				&controllers.MainController{},
+			),
+		),
+
+		beego.NSNamespace("/rbac",
+			beego.NSInclude(
+				&controllers.RbacController{},
+			),
+		),
+
 	)
 	beego.AddNamespace(ns)
 
@@ -64,8 +77,5 @@ func init() {
 		}
 	})
 
-	beego.Router("/home", &controllers.MainController{})
-
-
-
+	//beego.Router("/home", &controllers.MainController{})
 }

@@ -7,13 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego"
 	"rbacAdmin/repositories"
 )
 
 // UserController operations for User
 type UserController struct {
-	beego.Controller
+	BaseController
 }
 
 // URLMapping ...
@@ -83,20 +82,12 @@ func (c *UserController) GetAll() {
 	var sortby []string
 	var order []string
 	var query = make(map[string]string)
-	var limit int64 = 10
-	var offset int64
+	var page	int64
+	var pageSize int64
 
 	// fields: col1,col2,entity.col3
 	if v := c.GetString("fields"); v != "" {
 		fields = strings.Split(v, ",")
-	}
-	// limit: 10 (default is 10)
-	if v, err := c.GetInt64("limit"); err == nil {
-		limit = v
-	}
-	// offset: 0 (default is 0)
-	if v, err := c.GetInt64("offset"); err == nil {
-		offset = v
 	}
 	// sortby: col1,col2
 	if v := c.GetString("sortby"); v != "" {
@@ -120,24 +111,32 @@ func (c *UserController) GetAll() {
 		}
 	}
 
-	l, err := models.GetAllUser(query, fields, sortby, order, offset, limit)
+	// limit: 10 (default is 10)
+	if v, err := c.GetInt64("p"); err == nil {
+		page = v
+	}
+	// offset: 0 (default is 0)
+	if v, err := c.GetInt64("pageSize"); err == nil {
+		pageSize = v
+	}
+
+	if pageSize == 0 {
+		pageSize = 10
+	}
+
+	if page == 0 {
+		page = 1
+	}
+
+	//l, err := models.GetAllAdminUsers(query, fields, sortby, order, offset, limit)
+	pageData, err := repositories.AdminUsers_Pagination(query, fields, sortby, order, page, pageSize)
 	if err != nil {
 		c.Data["json"] = err.Error()
 	} else {
-		//c.Data["json"] = l
 
-		c.Layout = "_layout/layout.html"
-		c.TplName = "user/index.tpl"
-		c.LayoutSections = map[string]string{}
-		c.LayoutSections["HtmlHead"] = "_layout/header.html"
-		c.LayoutSections["Scripts"] = "_layout/scripts.html"
-		c.LayoutSections["HtmlFooter"] = "_layout/footer.html"
-		c.LayoutSections["LeftNav"] = "_layout/left-nav.html"
-		c.Data["list"] = l
-		c.Data["weburl"] = beego.AppConfig.String("weburl")
-
-		c.Data["menus"] = c.GetSession("menus").(map[int]*repositories.Menus)
-
+		c.TplName = "user/index.html"
+		c.Layout = "_layout/iframe_layout.html"
+		c.Data["page"] = pageData
 	}
 	//c.ServeJSON()
 }
