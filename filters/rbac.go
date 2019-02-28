@@ -3,10 +3,7 @@ package filters
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/casbin/beego-orm-adapter"
-	"github.com/casbin/casbin"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/plugins/authz"
+	"rbacAdmin/models"
 )
 
 /**
@@ -16,27 +13,40 @@ import (
 func init() {
 	beego.InsertFilter("/admin/*", beego.BeforeRouter, func(context *context.Context) {
 		//校验用户名和密码
-		sess, _ := beego.GlobalSessions.SessionStart(context.ResponseWriter, context.Request)
-		defer sess.SessionRelease(context.ResponseWriter)
+		r, w := context.Request, context.ResponseWriter
+		sess, _ := beego.GlobalSessions.SessionStart(w, r)
+		defer sess.SessionRelease(w)
 
-		role := ""
-
-		sessRole := sess.Get("role")
-		if sessRole != nil {
-			role = sessRole.(string)
+		//登录无需验证授权
+		if r.URL.Path == "/admin/login/login" {
+			return
 		}
 
-		//角色
-		context.Request.SetBasicAuth(role, "")
+		//获取权限列表
+		canAccess := false
+		pl := sess.Get("permissions").([]models.AdminPermissions)
+		for _, p := range pl {
+			if p.UrlPath == r.URL.Path {
+				canAccess = true
+			}
+		}
+
+		if canAccess == false {//跳转404
+			w.WriteHeader(403)
+			w.Write([]byte("403 Forbidden\n"))
+		}
 	})
 
 	//beego-orm-adapter
-	a := beegoormadapter.NewAdapter("mysql", beego.AppConfig.String("mysqldsn"), true)
-	e := casbin.NewEnforcer("rbac_model.conf", a)
+	//a := beegoormadapter.NewAdapter("mysql", beego.AppConfig.String("mysqldsn"), true)
+	//e := casbin.NewEnforcer("rbac_model.conf", a)
+	//
+	//e.LoadPolicy()
+	//
+	//logs.Info("Policies:", e.GetPolicy())
 
-	e.LoadPolicy()
+	//beego.InsertFilter("/admin/*", beego.BeforeRouter, authz.NewAuthorizer(e))
 
-	logs.Info("Policies:", e.GetPolicy())
-
-	beego.InsertFilter("/admin/*", beego.BeforeRouter, authz.NewAuthorizer(e))
+	//authPlugin := auth.NewBasicAuthenticator(SecretAuth, "Authorization Required")
+	//beego.InsertFilter("/admin/user", beego.BeforeRouter,authPlugin)
 }

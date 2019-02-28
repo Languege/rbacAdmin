@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego"
+	"rbacAdmin/repositories"
 )
 
 // UserController operations for User
@@ -134,6 +135,9 @@ func (c *UserController) GetAll() {
 		c.LayoutSections["LeftNav"] = "_layout/left-nav.html"
 		c.Data["list"] = l
 		c.Data["weburl"] = beego.AppConfig.String("weburl")
+
+		c.Data["menus"] = c.GetSession("menus").(map[int]*repositories.Menus)
+
 	}
 	//c.ServeJSON()
 }

@@ -2,6 +2,10 @@ package controllers
 
 import (
 	"github.com/astaxie/beego"
+	"rbacAdmin/models"
+	"golang.org/x/crypto/bcrypt"
+	"rbacAdmin/repositories"
+	"github.com/astaxie/beego/logs"
 )
 
 // LoginController operations for Login
@@ -73,14 +77,53 @@ func (c *LoginController) Login() {
 	if c.Ctx.Request.Method == "GET" {
 		c.TplName = "login/login.html"
 	}else{
-		//获取用户名，密码
+		var email, password string
+		email = c.GetString("email")
+		password = c.GetString("password")
 
-		c.SetSession("role", c.GetString("role"))
-		c.SetSession("username", c.GetString("username"))
-		c.SetSession("password", c.GetString("password"))
+		//获取用户名，密码
+		ml, err := models.GetAllAdminUsers(map[string]string{"email":email}, nil, nil, nil, 0, 1)
+		if err != nil || len(ml) <= 0{
+			c.Data["json"] = map[string]interface{}{"code":-1, "msg":"用户信息查询失败"}
+			c.ServeJSON()
+			return
+		}
+
+		user := ml[0].(models.AdminUsers)
+
+		if  bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
+			c.Data["json"] = map[string]interface{}{"code":-2, "msg":"密码不正确"}
+
+			//bcryptSecret, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			//if err == nil {
+			//	user.Password = string(bcryptSecret)
+			//
+			//	models.UpdateAdminUsersById(&user)
+			//}
+
+			c.ServeJSON()
+			return
+		}
+
+		//c.SetSession("role", c.GetString("role"))
+		//c.SetSession("username", c.GetString("username"))
+		//c.SetSession("password", c.GetString("password"))
+
+		c.SetSession("user", user)
 
 		//跳转首页
 		//c.Ctx.Redirect(302, "/admin/user/")
+
+		//权限数据测试
+		pl, err := repositories.RBAC_GetUserPermissions(user.Id)
+		if err == nil {
+			logs.Info(pl)
+			c.SetSession("permissions", pl)
+			//左侧菜单
+			menus := repositories.RBAC_Menus(pl)
+			logs.Info(menus)
+			c.SetSession("menus", menus)
+		}
 
 		c.Data["json"] = map[string]interface{}{"code":0, "msg":""}
 		c.ServeJSON()

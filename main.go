@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/astaxie/beego/orm"
+	_ "rbacAdmin/filters"
 )
 
 
@@ -33,9 +34,11 @@ func init() {
 
 	//注册mysql
 
-	//orm.RegisterDriver("mysql", orm.DRMySQL)
+	orm.RegisterDriver("mysql", orm.DRMySQL)
 	// dsn := beego.AppConfig.String("mysqluser") + ":" + beego.AppConfig.String("mysqlpass") + "@tcp(" +beego.AppConfig.String("mysqlurls") +")/" + beego.AppConfig.String("mysqldb")
 	orm.RegisterDataBase("default", "mysql", beego.AppConfig.String("mysqldsn"))
+
+	orm.Debug = true
 }
 
 func main() {
