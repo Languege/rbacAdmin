@@ -2,6 +2,10 @@ package controllers
 
 import (
 	"rbacAdmin/repositories"
+	"rbacAdmin/models"
+	"strings"
+	"strconv"
+	"time"
 )
 
 // RbacController operations for Rbac
@@ -89,16 +93,300 @@ func (c *RbacController) PermissionList() {
 		return
 	}
 
+	//筛选非分类（一级）权限
+	query["fid__gt"] = "0"
 	pageData, err := repositories.AdminPermissions_Pagination(query, fields, sortby, order, page, pageSize)
 	if err != nil {
 		c.Data["json"] = err.Error()
 		c.ServeJSON()
 		return
 	} else {
+		//查询分类(一级权限)
+		fml, err := models.GetAllAdminPermissions(map[string]string{"fid":"0"}, nil, nil, nil, 0, -1)
+		if err == nil {
+			c.Data["fml"] = fml
+		}
+
+		//重新构建结构
+		list := []repositories.SubAdminPermission{}
+		Fids := []int{}
+
+		for _, v := range pageData.List.([]interface{}) {
+			tmp, ok  := v.(models.AdminPermissions)
+			if ok {
+				Fids = append(Fids, int(tmp.Fid))
+				list = append(list, repositories.SubAdminPermission{
+					tmp,
+					"",
+				})
+			}
+		}
+
+		//查询分类
+
+		fpl, err := repositories.AdminPermissions_GetByIds(Fids)
+		if err == nil {
+			for k, v := range list {
+				//查询
+				if p, ok := fpl[int(v.Fid)]; ok {
+					list[k].PName = p.DisplayName
+				}
+			}
+		}
+
+		pageData.List = list
 
 		c.TplName = "rbac/permission_list.html"
 		c.Layout = "_layout/iframe_layout.html"
 		c.Data["page"] = pageData
+	}
+}
+
+//@Description	删除
+//@Param	ids		string	权限ID 多个ID用逗号分隔
+//@router /permission_del	[post]
+func(c *RbacController) PermissionDel() {
+	idsStr := c.GetString("ids", "")
+	if idsStr == "" {
+		c.Data["json"] = map[string]interface{}{"code":-1, "msg":"权限ID不能为空"}
+		c.ServeJSON()
+		return
+	}
+
+	ids := []int{}
+	id_list := strings.Split(idsStr, ",")
+	for _, v := range id_list {
+		id, err := strconv.Atoi(v)
+		if err == nil {
+			ids = append(ids, id)
+		}
+	}
+
+	if len(ids) == 0 {
+		c.Data["json"] = map[string]interface{}{"code":-2, "msg":"没有有效ID"}
+		c.ServeJSON()
+		return
+	}
+
+	err := repositories.AdminPermission_DelByIds(ids)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{"code":-3, "msg":err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{"code":0, "msg":""}
+	c.ServeJSON()
+	return
+}
+
+//Description	权限编辑
+//@router	/permission_edit	[get,post]
+func(c *RbacController) PermissionEdit() {
+	//获取权限ID
+	id, err := c.GetInt32("id")
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	//查询信息
+	m, err := models.GetAdminPermissionsById(int(id))
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	if c.Ctx.Request.Method == "GET" {
+		//查询分类(一级权限)
+		fml, err := models.GetAllAdminPermissions(map[string]string{"fid":"0"}, nil, nil, nil, 0, -1)
+		if err == nil {
+			c.Data["fml"] = fml
+		}
+
+		c.Data["m"] = m
+		c.TplName = "rbac/permission_edit.html"
+		c.Layout = "_layout/iframe_layout.html"
+	}else{
+		fid, err := c.GetInt("fid")
+		if err != nil {
+			c.Data["json"] = err.Error()
+			c.ServeJSON()
+			return
+		}
+
+		m.Fid = uint(fid)
+		m.UrlPath = c.GetString("url_path")
+		m.DisplayName = c.GetString("display_name")
+		m.UpdatedAt = time.Now()
+
+		err = models.UpdateAdminPermissionsById(m)
+
+		if err != nil {
+			c.Data["json"] = err.Error()
+			c.ServeJSON()
+			return
+		}
+
+		c.Data["json"] =  map[string]interface{}{"code":0, "msg":""}
+		c.ServeJSON()
+		return
+	}
+}
+
+//@Description	权限添加
+//@router /permission_add 	[post]
+func (c *RbacController) PermissionAdd() {
+	fid, err := c.GetInt("fid")
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	m := &models.AdminPermissions{}
+	m.Fid = uint(fid)
+	m.UrlPath = c.GetString("url_path")
+	m.DisplayName = c.GetString("display_name")
+	if c.GetString("is_menu") != "" {
+		m.IsMenu = 1
+	}
+	m.UpdatedAt = time.Now()
+	m.CreatedAt = time.Now()
+
+	_, err = models.AddAdminPermissions(m)
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}else{
+		c.Redirect(c.Ctx.Request.Referer(), 302)
+	}
+}
+
+//@router /category_list	[get]
+func (c *RbacController) CategoryList() {
+
+	query, fields, sortby, order, page, pageSize, err := c.PageParams()
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	//筛选非分类（一级）权限
+	query["fid"] = "0"
+	pageData, err := repositories.AdminPermissions_Pagination(query, fields, sortby, order, page, pageSize)
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	} else {
+		c.TplName = "rbac/category_list.html"
+		c.Layout = "_layout/iframe_layout.html"
+		c.Data["page"] = pageData
+	}
+}
+
+//@Description	分类添加
+//@router /category_add 	[post]
+func (c *RbacController) CategoryAdd() {
+
+	m := &models.AdminPermissions{}
+	m.DisplayName = c.GetString("display_name")
+	m.IsMenu = 1
+	m.UpdatedAt = time.Now()
+	m.CreatedAt = time.Now()
+
+	_, err := models.AddAdminPermissions(m)
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}else{
+		c.Redirect(c.Ctx.Request.Referer(), 302)
+	}
+}
+
+//@Description	删除
+//@Param	ids		string	权限ID 多个ID用逗号分隔
+//@router /category_del	[post]
+func(c *RbacController) CategoryDel() {
+	idsStr := c.GetString("ids", "")
+	if idsStr == "" {
+		c.Data["json"] = map[string]interface{}{"code":-1, "msg":"ID不能为空"}
+		c.ServeJSON()
+		return
+	}
+
+	ids := []int{}
+	id_list := strings.Split(idsStr, ",")
+	for _, v := range id_list {
+		id, err := strconv.Atoi(v)
+		if err == nil {
+			ids = append(ids, id)
+		}
+	}
+
+	if len(ids) == 0 {
+		c.Data["json"] = map[string]interface{}{"code":-2, "msg":"没有有效ID"}
+		c.ServeJSON()
+		return
+	}
+
+	err := repositories.AdminPermission_DelByIds(ids)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{"code":-3, "msg":err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{"code":0, "msg":""}
+	c.ServeJSON()
+	return
+}
+
+//Description	权限编辑
+//@router	/category_edit	[get,post]
+func(c *RbacController) CategoryEdit() {
+	//获取权限ID
+	id, err := c.GetInt32("id")
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	//查询信息
+	m, err := models.GetAdminPermissionsById(int(id))
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	if c.Ctx.Request.Method == "GET" {
+		c.Data["m"] = m
+		c.TplName = "rbac/category_edit.html"
+		c.Layout = "_layout/iframe_layout.html"
+	}else{
+
+		m.DisplayName = c.GetString("display_name")
+		m.UpdatedAt = time.Now()
+
+		err = models.UpdateAdminPermissionsById(m)
+
+		if err != nil {
+			c.Data["json"] = err.Error()
+			c.ServeJSON()
+			return
+		}
+
+		c.Data["json"] =  map[string]interface{}{"code":0, "msg":""}
+		c.ServeJSON()
+		return
 	}
 }
 

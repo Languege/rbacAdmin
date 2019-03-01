@@ -51,9 +51,9 @@
                     type:"post",
                     data:data.field,
                     dataType:"json",
-                    success:function (data) {
-                        console.log(data)
-                        if(data.code == 0) {
+                    success:function (e) {
+                        console.log(e);
+                        if(e.code == 0) {
                             location.href = "/admin/home/welcome"
                         }else{
                             layer.msg(e.msg, function(){

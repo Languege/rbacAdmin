@@ -4,6 +4,8 @@ import (
 	"rbacAdmin/models"
 	"github.com/astaxie/beego/orm"
 	"strings"
+	"github.com/pkg/errors"
+	"strconv"
 )
 
 /**
@@ -43,5 +45,58 @@ func AdminPermissions_GetCount(query map[string]string) (count int64, err error)
 
 
 	count, err =  qs.Count()
+	return
+}
+
+
+type SubAdminPermission struct {
+	models.AdminPermissions
+	PName		string	//所属分类名称
+}
+
+
+func AdminPermissions_GetByIds(ids []int)(map[int]models.AdminPermissions, error){
+	if len(ids) == 0{
+		return nil, errors.New("ids is empty")
+	}
+
+	ids_tmp := []interface{}{}
+	for _, id := range ids {
+		ids_tmp = append(ids_tmp, id)
+	}
+
+	o := orm.NewOrm()
+	qs := o.QueryTable(new(models.AdminPermissions))
+
+	l := []models.AdminPermissions{}
+	_, err := qs.Filter("id__in", ids_tmp...).All(&l)
+	if err != nil {
+		return nil, err
+	}
+
+	m := map[int]models.AdminPermissions{}
+	for _, v := range l {
+		m[v.Id] = v
+	}
+
+	return m, nil
+}
+
+
+func AdminPermission_DelByIds(ids []int)(err error) {
+	if len(ids) == 0 {
+		return errors.New("ids can not empty")
+	}
+
+	idsStr := ""
+	for _, v := range ids {
+		idsStr += strconv.Itoa(v) + ","
+	}
+
+	idsStr = strings.TrimRight(idsStr, ",")
+
+	o := orm.NewOrm()
+	_, err = o.Raw("DELETE FROM admin_permissions WHERE id IN(" + idsStr + ")").Exec()
+
 	return
 }

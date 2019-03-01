@@ -135,15 +135,6 @@ func init() {
 
     beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
         beego.ControllerComments{
-            Method: "GetOne",
-            Router: `/:id`,
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
-        beego.ControllerComments{
             Method: "Put",
             Router: `/:id`,
             AllowHTTPMethods: []string{"put"},
@@ -156,6 +147,78 @@ func init() {
             Method: "Delete",
             Router: `/:id`,
             AllowHTTPMethods: []string{"delete"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "GetOne",
+            Router: `/:id`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "CategoryAdd",
+            Router: `/category_add`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "CategoryDel",
+            Router: `/category_del`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "CategoryEdit",
+            Router: `/category_edit`,
+            AllowHTTPMethods: []string{"get","post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "CategoryList",
+            Router: `/category_list`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "PermissionAdd",
+            Router: `/permission_add`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "PermissionDel",
+            Router: `/permission_del`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"] = append(beego.GlobalControllerRouter["rbacAdmin/controllers:RbacController"],
+        beego.ControllerComments{
+            Method: "PermissionEdit",
+            Router: `/permission_edit`,
+            AllowHTTPMethods: []string{"get","post"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
