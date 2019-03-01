@@ -100,3 +100,34 @@ func AdminPermission_DelByIds(ids []int)(err error) {
 
 	return
 }
+
+type CategoryNode struct {
+	Self models.AdminPermissions
+	SubNodes	[]models.AdminPermissions
+}
+
+//构建2维权限列表
+func AdminPermission_CategoryTree(permissions []models.AdminPermissions)(categories map[int]*CategoryNode) {
+	categories = map[int]*CategoryNode{}
+
+	//首先找到分类
+	for _, v := range permissions  {
+		if v.Fid == 0 {
+			m := &CategoryNode{
+				Self:v,
+				SubNodes:[]models.AdminPermissions{},
+			}
+
+			categories[v.Id] = m
+		}
+	}
+
+	//二级菜单填充
+	for _, v := range permissions {
+		if m, ok := categories[int(v.Fid)]; ok {
+			m.SubNodes = append(m.SubNodes, v)
+		}
+	}
+
+	return
+}

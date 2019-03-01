@@ -85,7 +85,7 @@ func RBAC_GetRolePermissions(roleIds []int)(permission []models.AdminPermissions
 	inStr = strings.TrimRight(inStr, ",")
 
 	o := orm.NewOrm()
-	_, err = o.Raw("SELECT p.* FROM admin_permissions AS p LEFT JOIN admin_permission_role pr ON pr.`permission_id`=p.`id` WHERE p.`id` IN(?)", inStr).QueryRows(&permission)
+	_, err = o.Raw("SELECT p.* FROM admin_permissions AS p LEFT JOIN admin_permission_role pr ON pr.`permission_id`=p.`id` WHERE pr.`role_id` IN(?)", inStr).QueryRows(&permission)
 
 	return
 }

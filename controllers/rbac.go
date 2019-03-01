@@ -406,3 +406,169 @@ func (c *RbacController) RoleList()  {
 		c.Data["page"] = pageData
 	}
 }
+
+//@Description	角色添加
+//@router /role_add		[get,post]
+func (c *RbacController) RoleAdd() {
+
+	if c.Ctx.Request.Method == "GET" {
+		//查询所有权限
+		pl, err := models.GetAllAdminPermissions(nil, nil, nil, nil, 0, -1)
+		if err == nil {
+			//对权限数据按分类进行组织
+			cpl := []models.AdminPermissions{}
+			for _, v := range pl {
+				p := v.(models.AdminPermissions)
+				cpl = append(cpl, p)
+			}
+
+			cl := repositories.AdminPermission_CategoryTree(cpl)
+			c.Data["cl"] = cl
+		}
+
+		c.TplName = "rbac/role_add.html"
+		c.Layout = "_layout/iframe_layout.html"
+	}else{
+		ids := []int{}
+		params := c.Ctx.Request.Form
+		//解析ID
+		for k, v := range params {
+			if strings.Contains(k, "id[") {
+				id, err := strconv.Atoi(v[0])
+				if err == nil {
+					ids = append(ids, id)
+				}
+			}
+		}
+
+
+		name := c.GetString("name")
+		description := c.GetString("description")
+
+		//创建角色并添加对应的权限
+		err := repositories.AdminRoles_CreateRole(name, description, ids)
+		if err != nil {
+			c.Data["json"] =  map[string]interface{}{"code":-1, "msg":err.Error()}
+			c.ServeJSON()
+			return
+		}
+
+		c.Data["json"] =  map[string]interface{}{"code":0, "msg":""}
+		c.ServeJSON()
+		return
+	}
+}
+
+//@Description	角色删除以及对于的权限
+//@router	/role_del	[post]
+func(c *RbacController) RoleDel() {
+	idsStr := c.GetString("ids", "")
+	if idsStr == "" {
+		c.Data["json"] = map[string]interface{}{"code":-1, "msg":"ID不能为空"}
+		c.ServeJSON()
+		return
+	}
+
+	ids := []int{}
+	id_list := strings.Split(idsStr, ",")
+	for _, v := range id_list {
+		id, err := strconv.Atoi(v)
+		if err == nil {
+			ids = append(ids, id)
+		}
+	}
+
+	if len(ids) == 0 {
+		c.Data["json"] = map[string]interface{}{"code":-2, "msg":"没有有效ID"}
+		c.ServeJSON()
+		return
+	}
+
+	err := repositories.AdminRoles_DelByIds(ids)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{"code":-3, "msg":err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{"code":0, "msg":""}
+	c.ServeJSON()
+	return
+}
+
+//@Description	角色编辑
+//@router /role_edit		[get,post]
+func(c *RbacController) RoleEdit() {
+	//获取权限ID
+	id, err := c.GetInt32("id")
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	//查询信息
+	m, err := models.GetAdminRolesById(int(id))
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	if c.Ctx.Request.Method == "GET" {
+		//查询所有权限
+		pl, err := models.GetAllAdminPermissions(nil, nil, nil, nil, 0, -1)
+		if err == nil {
+			//对权限数据按分类进行组织
+			cpl := []models.AdminPermissions{}
+			for _, v := range pl {
+				p := v.(models.AdminPermissions)
+				cpl = append(cpl, p)
+			}
+
+			cl := repositories.AdminPermission_CategoryTree(cpl)
+			c.Data["cl"] = cl
+		}
+
+		//查询角色的所有权限
+		myPL, err := repositories.RBAC_GetRolePermissions([]int{m.Id})
+		if err == nil {
+			c.Data["myPL"] = myPL
+		}
+
+		c.Data["m"] = m
+		c.TplName = "rbac/role_edit.html"
+		c.Layout = "_layout/iframe_layout.html"
+	}else{
+
+		ids := []int{}
+		params := c.Ctx.Request.Form
+		//解析ID
+		for k, v := range params {
+			if strings.Contains(k, "id[") {
+				id, err := strconv.Atoi(v[0])
+				if err == nil {
+					ids = append(ids, id)
+				}
+			}
+		}
+
+
+		m.Name = c.GetString("name")
+		m.Description = c.GetString("description")
+		m.DisplayName = m.Name
+		m.UpdatedAt = time.Now()
+
+		//创建角色并添加对应的权限m
+		err := repositories.AdminRoles_UpdateById(m, ids)
+		if err != nil {
+			c.Data["json"] =  map[string]interface{}{"code":-1, "msg":err.Error()}
+			c.ServeJSON()
+			return
+		}
+
+		c.Data["json"] =  map[string]interface{}{"code":0, "msg":""}
+		c.ServeJSON()
+		return
+	}
+}

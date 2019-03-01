@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/astaxie/beego/orm"
 	_ "rbacAdmin/filters"
+	"rbacAdmin/views"
 )
 
 
@@ -39,6 +40,9 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", beego.AppConfig.String("mysqldsn"))
 
 	orm.Debug = true
+
+	//添加模板函数
+	beego.AddFuncMap("CheckPermission", views.CheckPermission)
 }
 
 func main() {

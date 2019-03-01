@@ -11,16 +11,16 @@
 <div class="x-body">
     <div class="layui-row">
         <form class="layui-form layui-col-md12 x-so">
-            <input class="layui-input" placeholder="开始日" name="start" id="start">
-            <input class="layui-input" placeholder="截止日" name="end" id="end">
-            <input type="text" name="username"  placeholder="请输入用户名" autocomplete="off" class="layui-input">
+            <input class="layui-input" placeholder="开始日" name="created_at__gt" id="start">
+            <input class="layui-input" placeholder="截止日" name="created_at__lt" id="end">
+            <input type="text" name="name"  placeholder="角色名" autocomplete="off" class="layui-input">
             <button class="layui-btn"  lay-submit="" lay-filter="sreach"><i class="layui-icon">&#xe615;</i></button>
         </form>
     </div>
     <xblock>
         <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
-        <button class="layui-btn" onclick="x_admin_show('添加用户','./role-add.html')"><i class="layui-icon"></i>添加</button>
-        <span class="x-right" style="line-height:40px">共有数据：88 条</span>
+        <button class="layui-btn" onclick="x_admin_show('添加角色','/admin/rbac/role_add')"><i class="layui-icon"></i>添加</button>
+        <span class="x-right" style="line-height:40px">共有数据：{{.page.TotalCount}} 条</span>
     </xblock>
     <table class="layui-table">
         <thead>
@@ -32,29 +32,23 @@
             <th>角色名</th>
             <th>拥有权限规则</th>
             <th>描述</th>
-            <th>状态</th>
             <th>操作</th>
         </thead>
         <tbody>
         {{range .page.List}}
         <tr>
             <td>
-                <div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id='2'><i class="layui-icon">&#xe605;</i></div>
+                <div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id='{{.Id}}'><i class="layui-icon">&#xe605;</i></div>
             </td>
             <td>{{.Id}}</td>
             <td>{{.Name}}</td>
             <td>{{.DisplayName}}</td>
             <td>{{.Description}}</td>
-            <td class="td-status">
-                <span class="layui-btn layui-btn-normal layui-btn-mini">已启用</span></td>
             <td class="td-manage">
-                <a onclick="member_stop(this,'10001')" href="javascript:;"  title="启用">
-                    <i class="layui-icon">&#xe601;</i>
-                </a>
-                <a title="编辑"  onclick="x_admin_show('编辑','role-add.html')" href="javascript:;">
+                <a title="编辑"  onclick="x_admin_show('编辑','/admin/rbac/role_edit?id={{.Id}}')" href="javascript:;">
                     <i class="layui-icon">&#xe642;</i>
                 </a>
-                <a title="删除" onclick="member_del(this,'要删除的id')" href="javascript:;">
+                <a title="删除" onclick="member_del(this,{{.Id}})" href="javascript:;">
                     <i class="layui-icon">&#xe640;</i>
                 </a>
             </td>
@@ -109,9 +103,29 @@
     /*用户-删除*/
     function member_del(obj,id){
         layer.confirm('确认要删除吗？',function(index){
-            //发异步删除数据
-            $(obj).parents("tr").remove();
-            layer.msg('已删除!',{icon:1,time:1000});
+            $.ajax({
+                url:"/admin/rbac/role_del",
+                type:"post",
+                dataType:"json",
+                data:{"ids":id},
+                success:function (e) {
+                    console.log(e);
+                    if(e.code == 0) {
+                        //发异步删除数据
+                        $(obj).parents("tr").remove();
+                        layer.msg('已删除!',{icon:1,time:1000});
+                    }else{
+                        layer.msg(e.msg, function(){
+
+                        });
+                    }
+                } ,
+                error:function (e) {
+                    layer.msg(JSON.stringify(e),function(){
+
+                    });
+                }
+            });
         });
     }
 
@@ -121,10 +135,33 @@
 
         var data = tableCheck.getData();
 
+        console.log(data);
+
         layer.confirm('确认要删除吗？'+data,function(index){
-            //捉到所有被选中的，发异步进行删除
-            layer.msg('删除成功', {icon: 1});
-            $(".layui-form-checked").not('.header').parents('tr').remove();
+            ids = data.join(",");
+            $.ajax({
+                url:"/admin/rbac/role_del",
+                type:"post",
+                dataType:"json",
+                data:{"ids":ids},
+                success:function (e) {
+                    console.log(e);
+                    if(e.code == 0) {
+                        //捉到所有被选中的，发异步进行删除
+                        layer.msg('删除成功', {icon: 1});
+                        $(".layui-form-checked").not('.header').parents('tr').remove();
+                    }else{
+                        layer.msg(e.msg, function(){
+
+                        });
+                    }
+                } ,
+                error:function (e) {
+                    layer.msg(JSON.stringify(e),function(){
+
+                    });
+                }
+            });
         });
     }
 

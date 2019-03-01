@@ -4,6 +4,7 @@ import (
 	"github.com/astaxie/beego"
 	"strings"
 	"github.com/pkg/errors"
+	"github.com/astaxie/beego/logs"
 )
 
 /**
@@ -50,6 +51,15 @@ func(c *BaseController) PageParams() (query map[string]string, fields []string, 
 			query[k] = v
 		}
 	}
+
+	params := c.Ctx.Request.Form
+	for k, v := range params {
+		if len(v) == 1 && v[0] != "" {
+			query[k] = v[0]
+		}
+	}
+
+	logs.Info("query", query)
 
 	// limit: 10 (default is 10)
 	if v, err := c.GetInt64("page"); err == nil {
