@@ -94,12 +94,12 @@ func (c *LoginController) Login() {
 		if  bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
 			c.Data["json"] = map[string]interface{}{"code":-2, "msg":"密码不正确"}
 
-			bcryptSecret, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-			if err == nil {
-				user.Password = string(bcryptSecret)
-
-				models.UpdateAdminUsersById(&user)
-			}
+			//bcryptSecret, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			//if err == nil {
+			//	user.Password = string(bcryptSecret)
+			//
+			//	models.UpdateAdminUsersById(&user)
+			//}
 
 			c.ServeJSON()
 			return

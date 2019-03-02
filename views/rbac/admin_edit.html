@@ -74,7 +74,7 @@
             </label>
             <div class="layui-input-inline">
                 <input type="password" id="L_repass" name="repass" required="" lay-verify="repass"
-                       autocomplete="off" class="layui-input" value="}">
+                       autocomplete="off" class="layui-input" value="">
             </div>
         </div>
         <div class="layui-form-item">
@@ -99,7 +99,6 @@
                     return '昵称至少得5个字符啊';
                 }
             }
-            ,password: [/(.+){6,12}$/, '密码必须6到12位']
             ,repass: function(value){
                 if($('#L_password').val()!=$('#L_repass').val()){
                     return '两次密码不一致';

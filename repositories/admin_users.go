@@ -119,18 +119,26 @@ func AdminUsers_UpdateUser(admin_user_id int, name, email, mobile_num,  password
 		return
 	}
 
-	hashPasswordT := []byte{}
-	hashPasswordT, err = bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-	if err != nil {
-		return
+	if password != "" {
+		hashPasswordT := []byte{}
+		hashPasswordT, err = bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+		if err != nil {
+			return
+		}
+
+		hashPassword := string(hashPasswordT)
+
+		_, err = o.Raw("UPDATE `admin_users` SET `name`=?,`email`=?,`mobile_num`=?,`password`=?,`is_super`=?,`updated_at`=? WHERE id=?", name, email, mobile_num, hashPassword, isSuper, time.Now(), admin_user_id).Exec()
+		if err != nil {
+			return
+		}
+	}else{
+		_, err = o.Raw("UPDATE `admin_users` SET `name`=?,`email`=?,`mobile_num`=?,`is_super`=?,`updated_at`=? WHERE id=?", name, email, mobile_num,  isSuper, time.Now(), admin_user_id).Exec()
+		if err != nil {
+			return
+		}
 	}
 
-	hashPassword := string(hashPasswordT)
-
-	_, err = o.Raw("UPDATE `admin_users` SET `name`=?,`email`=?,`mobile_num`=?,`password`=?,`is_super`=?,`updated_at`=? WHERE id=?", name, email, mobile_num, hashPassword, isSuper, time.Now(), admin_user_id).Exec()
-	if err != nil {
-		return
-	}
 
 	//删除旧有角色
 	_, err = o.Raw("DELETE FROM admin_role_user WHERE admin_user_id=?",  admin_user_id).Exec()
