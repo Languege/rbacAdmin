@@ -6,6 +6,7 @@ import (
 	"strings"
 	"strconv"
 	"time"
+	"github.com/astaxie/beego/logs"
 )
 
 // RbacController operations for Rbac
@@ -572,3 +573,183 @@ func(c *RbacController) RoleEdit() {
 		return
 	}
 }
+
+//@Description	管理员列表
+//@router	/admin_list		[get]
+func(c* RbacController) AdminList() {
+	query, fields, sortby, order, page, pageSize, err := c.PageParams()
+
+	pageData, err := repositories.AdminUsers_Pagination(query, fields, sortby, order, page, pageSize)
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	} else {
+
+		c.TplName = "rbac/admin_list.html"
+		c.Layout = "_layout/iframe_layout.html"
+		c.Data["page"] = pageData
+	}
+}
+
+//@Description	管理员添加
+//@router	/admin_add		[get,post]
+func(c* RbacController) AdminAdd() {
+	if c.Ctx.Request.Method == "GET" {
+		//查询所有角色
+		rl, err := models.GetAllAdminRoles(nil, nil, nil, nil, 0, -1)
+		if err == nil {
+			c.Data["rl"] = rl
+		}
+
+		c.TplName = "rbac/admin_add.html"
+		c.Layout = "_layout/iframe_layout.html"
+	}else{
+		ids := []int{}
+		params := c.Ctx.Request.Form
+		//解析ID
+		for k, v := range params {
+			if strings.Contains(k, "id-") {
+				id, err := strconv.Atoi(v[0])
+				if err == nil {
+					ids = append(ids, id)
+				}
+			}
+		}
+
+		name := c.GetString("name")
+		mobileNum := c.GetString("mobile_num")
+		email := c.GetString("email")
+		password := c.GetString("password")
+		var isSuper int8
+		if c.GetString("is_super") != "" {
+			isSuper = 1
+		}
+
+
+		//创建角色并添加对应的权限
+		err := repositories.AdminUsers_CreateUser(name, email, mobileNum, password,  isSuper, ids)
+		if err != nil {
+			c.Data["json"] =  map[string]interface{}{"code":-1, "msg":err.Error()}
+			c.ServeJSON()
+			return
+		}
+
+		c.Data["json"] =  map[string]interface{}{"code":0, "msg":""}
+		c.ServeJSON()
+		return
+	}
+}
+
+//@Description	管理员编辑
+//@router	/admin_edit	[get,post]
+func(c* RbacController) AdminEdit() {
+	//查询管理员
+	id, err := c.GetInt("id")
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	m, err := models.GetAdminUsersById(id)
+	if err != nil {
+		c.Data["json"] = err.Error()
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["m"] = m
+
+	if c.Ctx.Request.Method == "GET" {
+		//查询所有角色
+		rl, err := models.GetAllAdminRoles(nil, nil, nil, nil, 0, -1)
+		if err == nil {
+			c.Data["rl"] = rl
+		}
+
+		//查询管理员拥有的角色
+		roleIds, err := repositories.RBAC_GetUserRoleIds(id)
+		logs.Debug(roleIds, err)
+		if err == nil {
+			c.Data["roleIds"] = roleIds
+		}
+
+		c.TplName = "rbac/admin_edit.html"
+		c.Layout = "_layout/iframe_layout.html"
+	}else{
+		ids := []int{}
+		params := c.Ctx.Request.Form
+		//解析ID
+		for k, v := range params {
+			if strings.Contains(k, "id-") {
+				id, err := strconv.Atoi(v[0])
+				if err == nil {
+					ids = append(ids, id)
+				}
+			}
+		}
+
+		name := c.GetString("name")
+		mobileNum := c.GetString("mobile_num")
+		email := c.GetString("email")
+		password := c.GetString("password")
+		var isSuper int8
+		if c.GetString("is_super") != "" {
+			isSuper = 1
+		}
+
+
+		//创建角色并添加对应的权限
+		err := repositories.AdminUsers_UpdateUser(id, name, email, mobileNum, password,  isSuper, ids)
+		if err != nil {
+			c.Data["json"] =  map[string]interface{}{"code":-1, "msg":err.Error()}
+			c.ServeJSON()
+			return
+		}
+
+		c.Data["json"] =  map[string]interface{}{"code":0, "msg":""}
+		c.ServeJSON()
+		return
+	}
+}
+
+//@Description	管理员(批量)删除
+//@router	/admin_del		[post]
+func(c* RbacController) AdminDel() {
+	idsStr := c.GetString("ids", "")
+	if idsStr == "" {
+		c.Data["json"] = map[string]interface{}{"code":-1, "msg":"ID不能为空"}
+		c.ServeJSON()
+		return
+	}
+
+	ids := []int{}
+	id_list := strings.Split(idsStr, ",")
+	for _, v := range id_list {
+		id, err := strconv.Atoi(v)
+		if err == nil {
+			ids = append(ids, id)
+		}
+	}
+
+	if len(ids) == 0 {
+		c.Data["json"] = map[string]interface{}{"code":-2, "msg":"没有有效ID"}
+		c.ServeJSON()
+		return
+	}
+
+	err := repositories.AdminUsers_DelByIds(ids)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{"code":-3, "msg":err.Error()}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{"code":0, "msg":""}
+	c.ServeJSON()
+	return
+}
+
+
+

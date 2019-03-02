@@ -17,3 +17,14 @@ func CheckPermission(p_id int, myPL []models.AdminPermissions) bool {
 
 	return false
 }
+
+//检测是否包含
+func IsContains(id int, ids []int) bool {
+	for _, v := range ids {
+		if v == id {
+			return true
+		}
+	}
+
+	return false
+}

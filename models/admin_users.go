@@ -14,11 +14,12 @@ type AdminUsers struct {
 	Id            int       `orm:"column(id);auto"`
 	Name          string    `orm:"column(name);size(255)"`
 	Email         string    `orm:"column(email);size(255)"`
+	MobileNum     string    `orm:"column(mobile_num);size(16)" description:"手机号"`
 	Password      string    `orm:"column(password);size(60)"`
 	IsSuper       int8      `orm:"column(is_super)" description:"是否超级管理员, 1-是， 0-否"`
 	RememberToken string    `orm:"column(remember_token);size(100);null"`
-	CreatedAt     time.Time `orm:"column(created_at);type(timestamp);auto_now"`
-	UpdatedAt     time.Time `orm:"column(updated_at);type(timestamp)"`
+	CreatedAt     time.Time `orm:"column(created_at);type(timestamp);auto_now_add"`
+	UpdatedAt     time.Time `orm:"column(updated_at);type(timestamp);auto_now_add"`
 }
 
 func (t *AdminUsers) TableName() string {

@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"strconv"
 	"strings"
+	"github.com/astaxie/beego/logs"
 )
 
 /**
@@ -53,14 +54,17 @@ func RBAC_GetUserRoleIds(userId int)(roleIds []int, err error) {
 	o := orm.NewOrm()
 
 	var list orm.ParamsList
-	_, err = o.Raw("SELECT role_id FROM role WHERE admin_user_id = ?", userId).ValuesFlat(&list)
+	_, err = o.Raw("SELECT role_id FROM `admin_role_user` WHERE admin_user_id = ?", userId).ValuesFlat(&list)
 	if err != nil {
 		return
 	}
 
+	logs.Debug("List:", list)
+
 	for _, v := range list {
-		id, ok := v.(int)
+		s, ok := v.(string)
 		if ok {
+			id, _ := strconv.Atoi(s)
 			roleIds = append(roleIds, id)
 		}
 	}

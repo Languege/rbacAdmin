@@ -54,7 +54,7 @@ func(c *BaseController) PageParams() (query map[string]string, fields []string, 
 
 	params := c.Ctx.Request.Form
 	for k, v := range params {
-		if len(v) == 1 && v[0] != "" {
+		if len(v) == 1 && v[0] != "" && strings.Contains(k, "page") == false {
 			query[k] = v[0]
 		}
 	}

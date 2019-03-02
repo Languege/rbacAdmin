@@ -43,6 +43,7 @@ func init() {
 
 	//添加模板函数
 	beego.AddFuncMap("CheckPermission", views.CheckPermission)
+	beego.AddFuncMap("IsContains", views.IsContains)
 }
 
 func main() {
