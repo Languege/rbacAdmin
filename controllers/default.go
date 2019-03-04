@@ -28,4 +28,7 @@ func (c *MainController) Welcome() {
 	c.Data["weburl"] = beego.AppConfig.String("weburl")
 
 	c.Data["menus"] = c.GetSession("menus").(map[int]*repositories.Menus)
+
+	//当前登录用户信息
+	c.Data["admin"] = c.GetSession("user")
 }
